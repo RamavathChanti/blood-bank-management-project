@@ -1,0 +1,692 @@
+{
+  "measuredAt": "2026-10-29T13:18:04.468Z",
+  "environment": "Local Inngest CLI 1.49.0 / SDK 4.26.1; temporary MongoDB 8.0.17 replica set; synthetic principals; no Atlas, Clerk or Vercel",
+  "comparisons": [
+    {
+      "mode": "Serial, no priority",
+      "slots": 1,
+      "acknowledged": 8,
+      "callbackInvocations": 8,
+      "databaseCommands": 8,
+      "peakActive": 1,
+      "pendingBeforeRelease": 7,
+      "queueDepth": null,
+      "queueDepthBasis": "Provider queue depth unavailable; pendingBeforeRelease is acknowledged minus observed started, before any completions",
+      "elapsedMs": 7506,
+      "throughputPerSecond": 1.0658140154543032,
+      "p95EndToEndMs": 8938,
+      "p95CriticalMs": 8938,
+      "injectedServiceMs": 800,
+      "acknowledgedIds": [
+        {
+          "id": "probe-0-0",
+          "eventIds": [
+            "01M63WXX3VS0ZB0HACZZ0VYNBP"
+          ]
+        },
+        {
+          "id": "probe-0-1",
+          "eventIds": [
+            "01M63WXX8BTA3KZ81MF5MP45YA"
+          ]
+        },
+        {
+          "id": "probe-0-2",
+          "eventIds": [
+            "01M63WXX8MA8MP1FXN9GVM59GV"
+          ]
+        },
+        {
+          "id": "probe-0-3",
+          "eventIds": [
+            "01M63WXX8Z2A53ZXDCY5Q4PT0C"
+          ]
+        },
+        {
+          "id": "probe-0-4",
+          "eventIds": [
+            "01M63WXX97B8NTN2MERWX4VW7A"
+          ]
+        },
+        {
+          "id": "probe-0-5",
+          "eventIds": [
+            "01M63WXX9GHQK8TCXA3MDNEKSR"
+          ]
+        },
+        {
+          "id": "probe-0-6",
+          "eventIds": [
+            "01M63WXYRZ4N228WXT9TSRDTFB"
+          ]
+        },
+        {
+          "id": "probe-0-7",
+          "eventIds": [
+            "01M63WXYS5DFBDWKVCVK49X4NA"
+          ]
+        }
+      ],
+      "starts": [
+        {
+          "id": "probe-0-0",
+          "at": 1793279849738,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-0-4",
+          "at": 1793279853908,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-0-2",
+          "at": 1793279854795,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-0-3",
+          "at": 1793279855711,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-0-5",
+          "at": 1793279856729,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-0-1",
+          "at": 1793279857626,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-0-7",
+          "at": 1793279858522,
+          "urgency": "CRITICAL"
+        },
+        {
+          "id": "probe-0-6",
+          "at": 1793279859422,
+          "urgency": "CRITICAL"
+        }
+      ],
+      "finishes": [
+        {
+          "id": "probe-0-0",
+          "at": 1793279853708
+        },
+        {
+          "id": "probe-0-4",
+          "at": 1793279854722
+        },
+        {
+          "id": "probe-0-2",
+          "at": 1793279855610
+        },
+        {
+          "id": "probe-0-3",
+          "at": 1793279856529
+        },
+        {
+          "id": "probe-0-5",
+          "at": 1793279857537
+        },
+        {
+          "id": "probe-0-1",
+          "at": 1793279858440
+        },
+        {
+          "id": "probe-0-7",
+          "at": 1793279859329
+        },
+        {
+          "id": "probe-0-6",
+          "at": 1793279860233
+        }
+      ]
+    },
+    {
+      "mode": "Two slots, no priority",
+      "slots": 2,
+      "acknowledged": 8,
+      "callbackInvocations": 8,
+      "databaseCommands": 8,
+      "peakActive": 2,
+      "pendingBeforeRelease": 6,
+      "queueDepth": null,
+      "queueDepthBasis": "Provider queue depth unavailable; pendingBeforeRelease is acknowledged minus observed started, before any completions",
+      "elapsedMs": 3563,
+      "throughputPerSecond": 2.2452989054167833,
+      "p95EndToEndMs": 5694,
+      "p95CriticalMs": 5049,
+      "injectedServiceMs": 800,
+      "acknowledgedIds": [
+        {
+          "id": "probe-1-0",
+          "eventIds": [
+            "01M63WY7K57Q903VJ02TKG19D4"
+          ]
+        },
+        {
+          "id": "probe-1-1",
+          "eventIds": [
+            "01M63WY7KAKKM3G6WSSN14KJ21"
+          ]
+        },
+        {
+          "id": "probe-1-2",
+          "eventIds": [
+            "01M63WY7TD06A777CT8M5868D1"
+          ]
+        },
+        {
+          "id": "probe-1-3",
+          "eventIds": [
+            "01M63WY7TM1VN849H9358SRBTC"
+          ]
+        },
+        {
+          "id": "probe-1-4",
+          "eventIds": [
+            "01M63WY7TQBVEJN56BZJK8ZC36"
+          ]
+        },
+        {
+          "id": "probe-1-5",
+          "eventIds": [
+            "01M63WY7TWP6FZ2F6WG6VZPV26"
+          ]
+        },
+        {
+          "id": "probe-1-6",
+          "eventIds": [
+            "01M63WY9A77KEWG0EN8XJMGT0G"
+          ]
+        },
+        {
+          "id": "probe-1-7",
+          "eventIds": [
+            "01M63WY9ACJ2MBSHTF9P06C4DC"
+          ]
+        }
+      ],
+      "starts": [
+        {
+          "id": "probe-1-0",
+          "at": 1793279860475,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-1-1",
+          "at": 1793279860487,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-1-5",
+          "at": 1793279864525,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-1-3",
+          "at": 1793279864531,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-1-2",
+          "at": 1793279865431,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-1-4",
+          "at": 1793279865441,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-1-6",
+          "at": 1793279866323,
+          "urgency": "CRITICAL"
+        },
+        {
+          "id": "probe-1-7",
+          "at": 1793279866330,
+          "urgency": "CRITICAL"
+        }
+      ],
+      "finishes": [
+        {
+          "id": "probe-1-0",
+          "at": 1793279864427
+        },
+        {
+          "id": "probe-1-1",
+          "at": 1793279864430
+        },
+        {
+          "id": "probe-1-5",
+          "at": 1793279865347
+        },
+        {
+          "id": "probe-1-3",
+          "at": 1793279865350
+        },
+        {
+          "id": "probe-1-2",
+          "at": 1793279866251
+        },
+        {
+          "id": "probe-1-4",
+          "at": 1793279866253
+        },
+        {
+          "id": "probe-1-6",
+          "at": 1793279867136
+        },
+        {
+          "id": "probe-1-7",
+          "at": 1793279867138
+        }
+      ]
+    },
+    {
+      "mode": "Two slots, critical priority",
+      "slots": 2,
+      "acknowledged": 8,
+      "callbackInvocations": 8,
+      "databaseCommands": 8,
+      "peakActive": 2,
+      "pendingBeforeRelease": 6,
+      "queueDepth": null,
+      "queueDepthBasis": "Provider queue depth unavailable; pendingBeforeRelease is acknowledged minus observed started, before any completions",
+      "elapsedMs": 4257,
+      "throughputPerSecond": 1.8792576932111817,
+      "p95EndToEndMs": 7201,
+      "p95CriticalMs": 3519,
+      "injectedServiceMs": 800,
+      "acknowledgedIds": [
+        {
+          "id": "probe-2-0",
+          "eventIds": [
+            "01M63WYE8WE6RQ7G95YTYN02AC"
+          ]
+        },
+        {
+          "id": "probe-2-1",
+          "eventIds": [
+            "01M63WYE8ZCBNJ4S9NR0HXG3KA"
+          ]
+        },
+        {
+          "id": "probe-2-2",
+          "eventIds": [
+            "01M63WYECBXZWEEDFSFFHPWD05"
+          ]
+        },
+        {
+          "id": "probe-2-3",
+          "eventIds": [
+            "01M63WYECEJ28B0DF5ZTRXD4C9"
+          ]
+        },
+        {
+          "id": "probe-2-4",
+          "eventIds": [
+            "01M63WYECJT4J6KN72C3BJXKWK"
+          ]
+        },
+        {
+          "id": "probe-2-5",
+          "eventIds": [
+            "01M63WYECN5JMT3HZHBEG6TW33"
+          ]
+        },
+        {
+          "id": "probe-2-6",
+          "eventIds": [
+            "01M63WYFVQ5DMDC3J42J9M3Y04"
+          ]
+        },
+        {
+          "id": "probe-2-7",
+          "eventIds": [
+            "01M63WYFVXKQ94ZPT5HWC5KJ34"
+          ]
+        }
+      ],
+      "starts": [
+        {
+          "id": "probe-2-1",
+          "at": 1793279867225,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-2-0",
+          "at": 1793279867235,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-2-7",
+          "at": 1793279871461,
+          "urgency": "CRITICAL"
+        },
+        {
+          "id": "probe-2-6",
+          "at": 1793279871491,
+          "urgency": "CRITICAL"
+        },
+        {
+          "id": "probe-2-3",
+          "at": 1793279872507,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-2-5",
+          "at": 1793279872534,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-2-2",
+          "at": 1793279873645,
+          "urgency": "URGENT"
+        },
+        {
+          "id": "probe-2-4",
+          "at": 1793279873672,
+          "urgency": "URGENT"
+        }
+      ],
+      "finishes": [
+        {
+          "id": "probe-2-1",
+          "at": 1793279871209
+        },
+        {
+          "id": "probe-2-0",
+          "at": 1793279871213
+        },
+        {
+          "id": "probe-2-7",
+          "at": 1793279872306
+        },
+        {
+          "id": "probe-2-6",
+          "at": 1793279872310
+        },
+        {
+          "id": "probe-2-3",
+          "at": 1793279873351
+        },
+        {
+          "id": "probe-2-5",
+          "at": 1793279873354
+        },
+        {
+          "id": "probe-2-2",
+          "at": 1793279874460
+        },
+        {
+          "id": "probe-2-4",
+          "at": 1793279874483
+        }
+      ]
+    }
+  ],
+  "sharedGuard": {
+    "acknowledged": 8,
+    "peakExecuting": 2,
+    "functions": 2,
+    "scope": "env",
+    "key": "pulsegrid-atlas",
+    "starts": [
+      {
+        "id": "shared-5",
+        "at": 1793279874954,
+        "urgency": "URGENT"
+      },
+      {
+        "id": "shared-2",
+        "at": 1793279875008,
+        "urgency": "URGENT"
+      },
+      {
+        "id": "shared-3",
+        "at": 1793279877236,
+        "urgency": "URGENT"
+      },
+      {
+        "id": "shared-0",
+        "at": 1793279877398,
+        "urgency": "URGENT"
+      },
+      {
+        "id": "shared-1",
+        "at": 1793279878226,
+        "urgency": "URGENT"
+      },
+      {
+        "id": "shared-6",
+        "at": 1793279878357,
+        "urgency": "URGENT"
+      },
+      {
+        "id": "shared-7",
+        "at": 1793279879330,
+        "urgency": "URGENT"
+      },
+      {
+        "id": "shared-4",
+        "at": 1793279879491,
+        "urgency": "URGENT"
+      }
+    ],
+    "finishes": [
+      {
+        "id": "shared-2",
+        "at": 1793279876917
+      },
+      {
+        "id": "shared-5",
+        "at": 1793279876956
+      },
+      {
+        "id": "shared-3",
+        "at": 1793279878047
+      },
+      {
+        "id": "shared-0",
+        "at": 1793279878231
+      },
+      {
+        "id": "shared-1",
+        "at": 1793279879044
+      },
+      {
+        "id": "shared-6",
+        "at": 1793279879169
+      },
+      {
+        "id": "shared-7",
+        "at": 1793279880150
+      },
+      {
+        "id": "shared-4",
+        "at": 1793279880312
+      }
+    ]
+  },
+  "production": {
+    "acknowledged": 12,
+    "pending": 0,
+    "accepted": 0,
+    "fulfilled": 0,
+    "escalated": 8,
+    "cancelled": 4,
+    "failed": 0,
+    "loss": 0,
+    "lossExplanation": "Zero observed loss is reported only when every supplied acknowledgement has a fulfilled, escalated or cancelled outcome. Unresolved or failed runs need workflow-history investigation; absence in Atlas is not proof of loss.",
+    "rows": [
+      {
+        "requestId": "emergency-e181e5208fe217be9d417a497ad0fc982fe22d6ac63ed171",
+        "outcome": "CANCELLED",
+        "status": "CANCELLED",
+        "recoveryMs": 2562
+      },
+      {
+        "requestId": "emergency-c7e2c2c580a1b980714da52236760c34ba1dbd962114cb49",
+        "outcome": "CANCELLED",
+        "status": "CANCELLED",
+        "recoveryMs": 1731
+      },
+      {
+        "requestId": "emergency-553a2bd5b17cb0f17c9b66ee9ea9ac075ab74d9068cfc3e0",
+        "outcome": "CANCELLED",
+        "status": "CANCELLED",
+        "recoveryMs": 2258
+      },
+      {
+        "requestId": "emergency-471b09f1e7cf66f28afcecb5ad381b39d079849d9eeb5215",
+        "outcome": "CANCELLED",
+        "status": "CANCELLED",
+        "recoveryMs": 1957
+      },
+      {
+        "requestId": "emergency-01c6469cad63645b33338e7923e24587dfe789e1a81d5320",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 1703
+      },
+      {
+        "requestId": "emergency-e06f5b08d3169fdca967a7209dd40d66c6f72d259af9c05f",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 1962
+      },
+      {
+        "requestId": "emergency-f0aff28bfcb4f4438a28371e03d9deac4a80a5c8113a8a0f",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 2554
+      },
+      {
+        "requestId": "emergency-2344c6e6f50c90b527e68d3bcf0cd5c026058ec870977067",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 1364
+      },
+      {
+        "requestId": "emergency-4d7fd36501b5a64efd7863ca873e682f0d22e72e73ba5d9c",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 2253
+      },
+      {
+        "requestId": "emergency-8d55b8fe3a650177ce5faf8df4c1ba998c288dd2c27ddb65",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 1355
+      },
+      {
+        "requestId": "emergency-c3b7980de1b382f1f58ed4d2a8d43a1f602a6807a67f4384",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 879
+      },
+      {
+        "requestId": "emergency-111ac0254097f7fc40fd08129ec9f5e119c9e83faee8d451",
+        "outcome": "ESCALATED",
+        "status": "ESCALATED",
+        "recoveryMs": 879
+      }
+    ],
+    "acknowledgedIds": [
+      {
+        "requestId": "emergency-e181e5208fe217be9d417a497ad0fc982fe22d6ac63ed171",
+        "eventIds": [
+          "01M63WYVC987TV3CJ90GAVBFSJ"
+        ]
+      },
+      {
+        "requestId": "emergency-c7e2c2c580a1b980714da52236760c34ba1dbd962114cb49",
+        "eventIds": [
+          "01M63WYVCD0APZNRSTC2HBS7KF"
+        ]
+      },
+      {
+        "requestId": "emergency-553a2bd5b17cb0f17c9b66ee9ea9ac075ab74d9068cfc3e0",
+        "eventIds": [
+          "01M63WYVCERY8C21YXG2X0DH8P"
+        ]
+      },
+      {
+        "requestId": "emergency-471b09f1e7cf66f28afcecb5ad381b39d079849d9eeb5215",
+        "eventIds": [
+          "01M63WYVCE7MTWQGM8193E2YYF"
+        ]
+      },
+      {
+        "requestId": "emergency-01c6469cad63645b33338e7923e24587dfe789e1a81d5320",
+        "eventIds": [
+          "01M63WYVCHKN5PVBE9W5CM11Y3"
+        ]
+      },
+      {
+        "requestId": "emergency-e06f5b08d3169fdca967a7209dd40d66c6f72d259af9c05f",
+        "eventIds": [
+          "01M63WYVCKGVVXXVDWT91CK5P3"
+        ]
+      },
+      {
+        "requestId": "emergency-f0aff28bfcb4f4438a28371e03d9deac4a80a5c8113a8a0f",
+        "eventIds": [
+          "01M63WYVCKY78475D58X8G5XF8"
+        ]
+      },
+      {
+        "requestId": "emergency-2344c6e6f50c90b527e68d3bcf0cd5c026058ec870977067",
+        "eventIds": [
+          "01M63WYVCKBB3J58N2NTK7K4M2"
+        ]
+      },
+      {
+        "requestId": "emergency-4d7fd36501b5a64efd7863ca873e682f0d22e72e73ba5d9c",
+        "eventIds": [
+          "01M63WYVCMJ70N764QW515T5HN"
+        ]
+      },
+      {
+        "requestId": "emergency-8d55b8fe3a650177ce5faf8df4c1ba998c288dd2c27ddb65",
+        "eventIds": [
+          "01M63WYVCMC4F30AVX0SPQWY86"
+        ]
+      },
+      {
+        "requestId": "emergency-c3b7980de1b382f1f58ed4d2a8d43a1f602a6807a67f4384",
+        "eventIds": [
+          "01M63WYVCNTJKNNPQ52F8E9RR6"
+        ]
+      },
+      {
+        "requestId": "emergency-111ac0254097f7fc40fd08129ec9f5e119c9e83faee8d451",
+        "eventIds": [
+          "01M63WYVCZD8026N4WVXHGS347"
+        ]
+      }
+    ],
+    "callbackInvocations": 24,
+    "elapsedMs": 3923,
+    "uniqueAllocatedUnits": 4,
+    "availableAfterDrain": 4,
+    "activeAllocationsAfterDrain": 0,
+    "countersMatch": true,
+    "duplicateAllocations": 0,
+    "databaseOperations": null,
+    "queueDepth": null
+  },
+  "limits": {
+    "maxRequests": 20,
+    "workflowSlots": 2
+  },
+  "hosted": {
+    "functionInstances": null,
+    "billingDelta": null,
+    "atlasOpsPerSecond": null
+  }
+}

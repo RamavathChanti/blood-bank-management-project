@@ -1,0 +1,9 @@
+import { LoadingState } from "@/components/ui/states";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { WorkerCheck } from "@/components/worker-check";
+
+export const metadata = { title: "System foundation" };
+
+export default function SystemPage() {
+  return <><div className="page-heading"><div><p className="eyebrow">FOUNDATION / STAGE 01</p><h1>A visible starting point.</h1><p className="page-description">Check the browser worker, explore shared states, and inspect application liveness.</p></div><StatusBadge>Scaffold mode</StatusBadge></div><div className="system-grid"><WorkerCheck /><section className="panel system-card"><p className="eyebrow">ACCESSIBLE SIGNALS</p><h2>Every color has a label.</h2><p>These are illustrative UI states, independent of the crimson brand color. They are not stock levels or service measurements.</p><div className="status-examples"><StatusBadge tone="healthy">Healthy / available</StatusBadge><StatusBadge tone="low">Low / attention</StatusBadge><StatusBadge tone="critical">Critical / action needed</StatusBadge><StatusBadge>Unknown / not connected</StatusBadge></div></section><section className="panel system-card"><p className="eyebrow">APPLICATION LIVENESS</p><h2>A small, honest health check.</h2><p>The Node.js endpoint reports this app&apos;s runtime and actual region when supplied by Vercel. It does not test Atlas, Clerk, or Inngest.</p><a className="text-link" href="/api/health">Inspect health JSON <span aria-hidden="true">↗</span></a><p className="muted text-small">No credentials, private records, or environment values are returned.</p></section><section className="system-card loading-example"><p className="eyebrow">SHARED LOADING STATE / PREVIEW</p><LoadingState /></section></div><div className="notice"><span aria-hidden="true">ⓘ</span><p>Empty states are visible in each planned workspace. Route failures offer a retry; unknown routes offer a path back to the Control Room.</p></div></>;
+}

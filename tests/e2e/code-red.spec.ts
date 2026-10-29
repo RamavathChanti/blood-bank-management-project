@@ -1,0 +1,91 @@
+import { expect, test } from "@playwright/test";
+
+test("validated intake and screened-stock journey finish only after arrival, handover and use", async ({ page }, testInfo) => {
+  const errors: string[] = [], apiWrites: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  page.on("request", r => { if (r.url().includes("/api/") && r.method() !== "GET") apiWrites.push(r.url()); });
+  await page.goto("/code-red");
+  await page.getByLabel("Quantity (component units)").fill("0");
+  await page.getByRole("button", { name: "Start simulated Code Red" }).click();
+  await expect(page.getByRole("region", { name: "Create a simulated request" }).getByRole("alert")).toContainText("quantity");
+  await page.getByLabel("Quantity (component units)").fill("1");
+  await page.getByRole("button", { name: "Start simulated Code Red" }).click();
+  await expect(page.getByRole("timer")).toContainText("120 min remaining");
+  await expect(page.getByText("Screened stock covers this request.", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Dispatch reserved stock" }).click();
+  await page.getByRole("button", { name: "Confirm handover", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Create a simulated request" }).getByRole("alert")).toContainText("arrival");
+  await page.getByRole("button", { name: "Advance 60 min", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm handover", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm synthetic use", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Completed locally" })).toContainText("all 1 unit(s)");
+  await expect(page.getByRole("button", { name: "Advance 1 min", exact: true })).toBeDisabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("code-red-stock-completed.png"), fullPage: true });
+  await page.getByRole("region", { name: "Journey progress", exact: true }).screenshot({ path: testInfo.outputPath("code-red-progress.png") });
+  expect(errors).toEqual([]); expect(apiWrites).toEqual([]);
+});
+
+test("shortage widens deduplicated waves, exposes refusals/timeouts and unresolved escalation", async ({ page }, testInfo) => {
+  await page.goto("/code-red");
+  await page.getByLabel("Demo scenario").selectOption("stock-shortage");
+  await page.getByRole("button", { name: "Start simulated Code Red" }).click();
+  await expect(page.getByText("Wave 1 · 5 km", { exact: true })).toBeVisible();
+  await expect(page.getByText(/95% target NOT met/).first()).toBeVisible();
+  const donor = page.getByRole("article", { name: "red-donor-4", exact: true });
+  await donor.getByRole("button", { name: "Decline", exact: true }).click();
+  await expect(donor).toContainText("DECLINED");
+  await page.getByRole("button", { name: "Dispatch reserved stock" }).click();
+  await page.getByRole("button", { name: "Advance 3 min", exact: true }).click();
+  await expect(page.getByText("Wave 2 · 10 km", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Advance 3 min", exact: true }).click();
+  await expect(page.getByText("Wave 3 · 25 km", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Advance 3 min", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Neighbouring-district" })).toContainText("unresolved");
+  await expect(page.getByRole("article")).toHaveCount(24);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath("code-red-shortage-escalated.png"), fullPage: true });
+  await page.getByRole("region", { name: "Donor waves", exact: true }).screenshot({ path: testInfo.outputPath("code-red-waves.png") });
+  await page.getByRole("button", { name: "Reset journey" }).click();
+  await expect(page.getByRole("heading", { name: "Journey progress" })).toHaveCount(0);
+});
+
+test("accepted donor stays outside screened stock until collection and six-hour screening", async ({ page }, testInfo) => {
+  await page.goto("/code-red");
+  await page.getByLabel("Demo scenario").selectOption("screened-recovery");
+  await page.getByRole("button", { name: "Start simulated Code Red" }).click();
+  const donor = page.getByRole("article", { name: "red-donor-4", exact: true });
+  await donor.getByRole("button", { name: "Accept", exact: true }).click();
+  await expect(donor).toContainText("ACCEPTED");
+  await expect(donor.getByRole("button", { name: "Collect synthetic donation" })).toBeDisabled();
+  await page.getByRole("button", { name: "Dispatch reserved stock" }).click();
+  await page.getByRole("button", { name: "Advance 15 min", exact: true }).click();
+  await donor.getByRole("button", { name: "Collect synthetic donation" }).click();
+  await expect(donor).toContainText("COLLECTED");
+  await expect(donor.getByRole("button", { name: "Pass all mock screens" })).toBeDisabled();
+  await page.getByRole("button", { name: "Advance 60 min", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm handover", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm synthetic use", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Emergency stock results" })).toContainText("TESTING");
+  await page.getByRole("button", { name: "Advance 360 min", exact: true }).click();
+  await donor.getByRole("button", { name: "Pass all mock screens" }).click();
+  await page.getByRole("button", { name: "Dispatch reserved stock" }).click();
+  await page.getByRole("button", { name: "Advance 60 min", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm handover", exact: true }).click();
+  await page.getByRole("button", { name: "Confirm synthetic use", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Completed locally" })).toContainText("all 2 unit(s)");
+  await page.screenshot({ path: testInfo.outputPath("code-red-screened-recovery.png"), fullPage: true });
+});
+
+test("cancellation releases local reservations and reload clears the journey", async ({ page }) => {
+  await page.goto("/code-red");
+  await page.getByLabel("Demo scenario").selectOption("stock-shortage");
+  await page.getByRole("button", { name: "Start simulated Code Red" }).click();
+  await page.getByRole("button", { name: "Cancel request", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Cancelled locally" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Emergency stock results" })).toContainText("AVAILABLE");
+  await expect(page.getByRole("button", { name: "Sample seeded replies" })).toBeDisabled();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Journey progress" })).toHaveCount(0);
+  await expect(page.getByLabel("Demo scenario")).toHaveValue("stock-available");
+});

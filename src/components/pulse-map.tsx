@@ -1,0 +1,95 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { COMPONENTS, GROUPS, type Component, type Group } from "@/core/domain";
+import { CONFIG_STORAGE_KEY, DEFAULT_SCENARIO, parseScenarioConfig, SCENARIOS, type ScenarioConfig } from "@/core/simulation-config";
+import { MAX_DURATION_MS, SPEEDS, type BankSummary, type SimulationSnapshot } from "@/core/simulator";
+import type { SimulationWorkerRequest, SimulationWorkerResponse } from "@/workers/protocol";
+
+const colors: Record<Group, string> = { "O-": "#ee9bad", "O+": "#ee9bad", "A-": "#c7a4ff", "A+": "#c7a4ff", "B-": "#edc172", "B+": "#edc172", "AB-": "#8fc9ed", "AB+": "#8fc9ed" };
+const names = { monsoon: "Monsoon baseline", "last-o-negative": "Last O-negative unit", "stock-shortage": "Stock shortage", "near-expiry": "Near-expiry inventory", "dengue-season": "Dengue-season demand" };
+function project(location: { latitude: number; longitude: number }) { return { x: 60 + (location.longitude - 72.7) / 1.35 * 720, y: 390 - (location.latitude - 18.4) / 1.05 * 340 }; }
+function simTime(at: string) { return new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(at)); }
+function elapsedLabel(ms: number) { return `${Math.floor(ms / 86_400_000)}d ${Math.floor(ms % 86_400_000 / 3_600_000)}h ${Math.floor(ms % 3_600_000 / 60_000)}m`; }
+function supply(bank: BankSummary, component: Component, group: Group | "ALL") { return group === "ALL" ? GROUPS.reduce((sum, g) => sum + bank.stock[component][g], 0) : bank.stock[component][group]; }
+function activate(event: React.KeyboardEvent, action: () => void) { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); action(); } }
+
+export function PulseMap() {
+  const [snapshot, setSnapshot] = useState<SimulationSnapshot | null>(null);
+  const [draft, setDraft] = useState<ScenarioConfig>(DEFAULT_SCENARIO);
+  const [running, setRunning] = useState(false), [busy, setBusy] = useState(false), [speed, setSpeed] = useState(3600);
+  const [error, setError] = useState(""), [storageNote, setStorageNote] = useState("");
+  const [group, setGroup] = useState<Group | "ALL">("ALL"), [component, setComponent] = useState<Component>("PRBC");
+  const [selectedBank, setSelectedBank] = useState("demo-bank-1"), [selectedHospital, setSelectedHospital] = useState<string | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+
+  useEffect(() => {
+    let worker: Worker;
+    let initialStorageNote = "";
+    const timeout = setTimeout(() => setError("Simulation worker did not respond. Reload to retry."), 20_000);
+    try {
+      worker = new Worker(new URL("../workers/simulation.worker.ts", import.meta.url), { type: "module" });
+      workerRef.current = worker;
+      const fail = () => { clearTimeout(timeout); setRunning(false); setBusy(false); setError("Simulation worker unavailable. Reload to retry in a browser with Web Workers."); };
+      worker.onerror = fail; worker.onmessageerror = fail;
+      worker.onmessage = ({ data }: MessageEvent<SimulationWorkerResponse>) => {
+        clearTimeout(timeout);
+        if (data.type === "error") { setError(data.message); setRunning(false); setBusy(false); return; }
+        if (data.type !== "snapshot") return;
+        setSnapshot(data.snapshot); setRunning(data.running); setBusy(data.busy); setSpeed(data.speed);
+        if (initialStorageNote) { setStorageNote(initialStorageNote); initialStorageNote = ""; }
+        if (data.loaded) {
+          setDraft(data.snapshot.config); setSelectedBank("demo-bank-1"); setSelectedHospital(null);
+          try { localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(data.snapshot.config)); }
+          catch { setStorageNote("Browser storage unavailable. Configuration lasts for this visit only."); }
+        }
+      };
+      let config = DEFAULT_SCENARIO;
+      try { const saved = localStorage.getItem(CONFIG_STORAGE_KEY); if (saved) config = parseScenarioConfig(JSON.parse(saved)); }
+      catch { initialStorageNote = "Saved configuration was unavailable or invalid; the monsoon baseline was loaded."; }
+      worker.postMessage({ type: "load", config } satisfies SimulationWorkerRequest);
+    } catch { clearTimeout(timeout); queueMicrotask(() => setError("Simulation worker unavailable. Reload to retry in a browser with Web Workers.")); }
+    return () => { clearTimeout(timeout); worker?.terminate(); workerRef.current = null; };
+  }, []);
+
+  function send(message: SimulationWorkerRequest) { setError(""); workerRef.current?.postMessage(message); }
+  function applyScenario() {
+    try { send({ type: "load", config: parseScenarioConfig(draft) }); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Invalid scenario configuration"); }
+  }
+  const selected = snapshot?.banks.find(bank => bank.id === selectedBank), hospital = snapshot?.hospitals.find(item => item.id === selectedHospital);
+  const metrics = snapshot?.metrics;
+
+  return <>
+    <div className="simulation-banner"><span className="simulation-beacon" aria-hidden="true" /><div><strong>SIMULATION MODE · SYNTHETIC DATA</strong><p>Browser worker · no Atlas writes · five-minute event resolution · 30-day run limit</p></div><span className="small-label" data-testid="playback-status">{busy ? "REPLAYING" : running ? "RUNNING" : "PAUSED"}</span></div>
+    <section className="panel lab-panel" aria-label="Scenario controls">
+      <div className="lab-section-heading"><div><p className="eyebrow">REPEATABLE BY DESIGN</p><h2>Set the scene</h2></div><span className="muted text-small">Configuration saves in this browser</span></div>
+      <div className="lab-controls"><label>Seed<input maxLength={80} value={draft.seed} onChange={event => setDraft({ ...draft, seed: event.target.value })} /></label><label>Dataset<select value={draft.preset} onChange={event => setDraft({ ...draft, preset: event.target.value as ScenarioConfig["preset"] })}><option value="development">Development · 4 banks / 200 donors</option><option value="demo">Demo · 20 banks / 5,000 donors</option></select></label><label>Scenario<select value={draft.scenario} onChange={event => setDraft({ ...draft, scenario: event.target.value as ScenarioConfig["scenario"] })}>{SCENARIOS.map(name => <option key={name} value={name}>{names[name]}</option>)}</select></label><label>Start clock (UTC or offset)<input value={draft.startedAt} onChange={event => setDraft({ ...draft, startedAt: event.target.value })} /></label></div>
+      <button className="button button-secondary" onClick={applyScenario}>Load scenario</button>
+      {storageNote && <p role="status" className="source-note">{storageNote}</p>}{error && <p className="error-text" role="alert">{error}</p>}
+    </section>
+    {!snapshot ? <section className="panel lab-panel" aria-busy={!error}><h2>{error ? "Simulation unavailable" : "Generating the pilot…"}</h2><p className="source-note">The dataset and event engine run in a separate browser worker.</p></section> : <>
+      <section className="panel transport-panel" aria-label="Simulation playback">
+        <div><p className="eyebrow">INJECTED SIMULATION CLOCK / IST</p><p className="simulation-clock" data-testid="simulation-clock">{simTime(snapshot.now)}</p><p className="source-note" data-testid="elapsed">Elapsed {elapsedLabel(snapshot.elapsedMs)} · seed {snapshot.config.seed} · {names[snapshot.config.scenario]}</p></div>
+        <div className="transport-actions"><label>Speed<select aria-label="Simulation speed" value={speed} onChange={event => send({ type: "speed", speed: Number(event.target.value) })}>{SPEEDS.map(value => <option key={value} value={value}>{value === 86400 ? "1 day / second" : `${value.toLocaleString("en-IN")}×`}</option>)}</select></label><button className="button button-primary" disabled={snapshot.elapsedMs >= MAX_DURATION_MS && !running && !busy} onClick={() => send({ type: running || busy ? "pause" : "play" })}>{running || busy ? "Pause" : "Play"}</button><button className="button button-secondary" disabled={busy || snapshot.elapsedMs + 3_600_000 > MAX_DURATION_MS} onClick={() => send({ type: "advance", milliseconds: 3_600_000 })}>Advance 1 hour</button><button className="button button-secondary" disabled={busy || snapshot.elapsedMs + 86_400_000 > MAX_DURATION_MS} onClick={() => send({ type: "advance", milliseconds: 86_400_000 })}>Advance 1 day</button><button className="button button-secondary" onClick={() => send({ type: "reset" })}>Reset</button><button className="button button-secondary" disabled={busy || !snapshot.elapsedMs} onClick={() => send({ type: "replay" })}>Replay elapsed time</button></div>
+      </section>
+      <div className="pulse-metrics" aria-label="Simulation metrics"><Metric label="Requests" value={String(metrics!.requests)} note={`${metrics!.requestedUnits} units requested`} id="requests" /><Metric label="Stock fulfilment" value={metrics!.fulfilmentPercent === null ? "—" : `${metrics!.fulfilmentPercent.toFixed(1)}%`} note={`${metrics!.fulfilled} fully matched / ${metrics!.requests} requests`} id="fulfilment" /><Metric label="Median / p95 match" value={`${metrics!.medianMatchMinutes ?? "—"} / ${metrics!.p95MatchMinutes ?? "—"}`} note="simulated minutes · fully matched only" id="match-time" /><Metric label="Expired" value={String(metrics!.expiredUnits)} note={`${metrics!.expiryPercent.toFixed(1)}% of all generated components`} id="expired" /><Metric label="Available stock" value={String(metrics!.availableStock)} note={`${metrics!.testingStock} quarantined · ${metrics!.inTransit} in transit`} id="stock" /></div>
+      <div className="pulse-layout"><section className="panel pulse-map-panel"><div className="panel-heading"><div><p className="eyebrow">MAHARASHTRA / FOUR-DISTRICT PILOT</p><h2>Pulse Map</h2></div><span className="small-label">OFFLINE GEOGRAPHIC VIEW</span></div>
+        <div className="lab-controls map-filters"><label>Blood group<select value={group} onChange={event => setGroup(event.target.value as Group | "ALL")}><option value="ALL">All groups</option>{GROUPS.map(item => <option key={item}>{item}</option>)}</select></label><label>Component<select value={component} onChange={event => setComponent(event.target.value as Component)}>{COMPONENTS.map(item => <option key={item}>{item}</option>)}</select></label></div>
+        <svg className="pulse-geography" viewBox="0 0 840 460" role="group" aria-label="Synthetic bank and hospital map">
+          <defs><pattern id="map-grid" width="42" height="46" patternUnits="userSpaceOnUse"><path d="M 42 0 L 0 0 0 46" fill="none" stroke="#36212e" strokeWidth=".6" /></pattern></defs><rect width="840" height="460" fill="#120d16" /><rect width="840" height="460" fill="url(#map-grid)" /><path d="M50 460 Q160 300 140 215 T120 0 L0 0 0 460Z" fill="#111e28" stroke="#36505a" strokeWidth="1.5" /><text x="40" y="380" fill="#88a0ac" fontSize="10" transform="rotate(-80 40 380)">ARABIAN SEA</text>
+          {snapshot.districts.map(district => { const p = project(district.location); return <g key={district.id}><ellipse cx={p.x} cy={p.y} rx={district.id === "pune" ? 74 : 57} ry="39" fill="#301c2e" fillOpacity=".5" stroke="#55344b" strokeDasharray="3 5" /><text x={p.x + 14} y={p.y + 46} fill="#c3a6b8" fontSize="11">{district.name}</text></g>; })}
+          {snapshot.hospitals.map(item => { const p = project(item.location); return <g key={item.id} role="button" tabIndex={0} aria-label={`Select ${item.name}`} aria-pressed={selectedHospital === item.id} onClick={() => setSelectedHospital(item.id)} onKeyDown={event => activate(event, () => setSelectedHospital(item.id))} className="hospital-marker"><title>{item.name} · {item.district}</title><circle cx={p.x} cy={p.y} r="10" fill="transparent" /><path d={`M${p.x - 4} ${p.y}h8 M${p.x} ${p.y - 4}v8`} stroke={selectedHospital === item.id ? "#ffd185" : "#c7d3d7"} strokeWidth="2" /></g>; })}
+          {snapshot.transfers.map(transfer => { const source = snapshot.banks.find(bank => bank.id === transfer.fromBankId), destination = snapshot.banks.find(bank => bank.id === transfer.toBankId); if (!source || !destination) return null; const from = project(source.location), to = project(destination.location); return <path className={transfer.status === "IN_TRANSIT" ? "transfer-particles" : undefined} data-testid="transfer-arc" key={transfer.id} d={`M${from.x},${from.y} Q${(from.x + to.x) / 2},${Math.min(from.y, to.y) - 70} ${to.x},${to.y}`} fill="none" stroke={transfer.status === "IN_TRANSIT" ? "#ed8dab" : "#75ccbd"} strokeWidth="2" strokeDasharray="5 5"><title>{transfer.id}: {transfer.status.replaceAll("_", " ")}</title></path>; })}
+          {snapshot.banks.map(bank => { const p = project(bank.location), count = supply(bank, component, group), active = bank.id === selectedBank; return <g key={bank.id} role="button" tabIndex={0} aria-label={`Select ${bank.name}, ${count} ${group === "ALL" ? "all-group" : group} ${component} units`} aria-pressed={active} onClick={() => setSelectedBank(bank.id)} onKeyDown={event => activate(event, () => setSelectedBank(bank.id))} className="bank-marker"><title>{bank.name} · {bank.district} · {count} available units</title><circle cx={p.x} cy={p.y} r="19" fill="#190e1a" stroke={active ? "#fff1f5" : "#563347"} strokeWidth={active ? 2 : 1} />{GROUPS.map((item, index) => <circle key={item} cx={p.x} cy={p.y} r="14" fill="none" stroke={bank.stock[component][item] ? colors[item] : "#463344"} opacity={group === "ALL" || group === item ? 1 : .2} strokeWidth="3" strokeDasharray="8 80" transform={`rotate(${index * 45 - 90} ${p.x} ${p.y})`} strokeLinecap={item.endsWith("+") ? "round" : "butt"} />)}<text x={p.x} y={p.y + 4} textAnchor="middle" fill={count ? "#f9e9f1" : "#ec9eaa"} fontSize="10">{count}</text></g>; })}
+          <text x="480" y="433" fill="#a88f9f" fontSize="10">72.7°E — 74.05°E · synthetic coordinates</text>
+        </svg><div className="map-legend"><span>◉ Bank · available units</span><span>＋ Hospital</span><span>┄ Transfer · pink in transit / cyan received</span><span>Ring order: {GROUPS.join(" / ")}, clockwise from top</span><span>Lit segment = stock present · round + / square − · counts use filters</span></div><p className="source-note map-note">Approximate projection; district halos and coastline are illustrative. No real institutions or routing estimates.</p>
+      </section><aside className="panel bank-details" aria-label="Selected institution details"><p className="eyebrow">SELECTED BANK</p><label className="bank-picker">Bank<select value={selectedBank} onChange={event => setSelectedBank(event.target.value)}>{snapshot.banks.map(bank => <option value={bank.id} key={bank.id}>{bank.name} · {bank.district}</option>)}</select></label>{selected && <><h2>{selected.name}</h2><p className="source-note">{selected.district} · synthetic location<br />{selected.location.latitude.toFixed(3)}°N, {selected.location.longitude.toFixed(3)}°E</p><p className="selected-stock" data-testid="selected-stock">{supply(selected, component, group)} <span>{component} units available{group !== "ALL" ? ` · ${group}` : " · all groups"}</span></p><div className="group-gauges">{GROUPS.map(item => <div key={item}><span style={{ color: colors[item] }}>{item}</span><meter min={0} max={Math.max(10, selected.stock[component][item])} value={selected.stock[component][item]} aria-label={`${selected.name} ${item} ${component} available units`} /><strong>{selected.stock[component][item]}</strong></div>)}</div><p className="source-note">Gauges show component units; bar scale is at least 10 units. The gauges measure stock units, not days of supply.</p></>}{hospital && <div className="hospital-detail"><p className="eyebrow">SELECTED HOSPITAL</p><h3>{hospital.name}</h3><p className="source-note">{hospital.district} · synthetic request source</p></div>}</aside></div>
+      <section className="panel activity-panel" aria-label="Heartbeat and activity"><div className="lab-section-heading"><div><p className="eyebrow">REGISTRY PULSE</p><h2>Activity heartbeat</h2></div><span className="mono">{metrics!.recentRequestsPerMinute.toFixed(2)} requests / simulated minute</span></div><svg className="heartbeat" viewBox="0 0 900 45" preserveAspectRatio="none" role="img" aria-label={metrics!.recentRequestsPerMinute ? "Activity in the last simulated hour" : "No requests in the last simulated hour"}><path d={metrics!.recentRequestsPerMinute ? "M0 24H90L100 18L110 30L120 2L135 44L145 24H280L290 18L300 30L310 2L325 44L335 24H470L480 18L490 30L500 2L515 44L525 24H660L670 18L680 30L690 2L705 44L715 24H900" : "M0 24H900"} fill="none" stroke="currentColor" strokeWidth="1.5" /></svg><p className="source-note">Last-hour requests ÷ 60 simulated minutes. The ECG indicates activity, not a clinical signal or cloud throughput.</p>{snapshot.activity.length ? <ol className="activity-list">{[...snapshot.activity].reverse().map(event => <li key={event.id}><time dateTime={event.at}>{simTime(event.at)} IST</time><span className={`event-kind event-${event.kind.toLowerCase()}`}>{event.kind}</span><span>{event.text}</span></li>)}</ol> : <p className="activity-empty">No events yet. Play or advance the clock to start the scenario.</p>}</section>
+      <p className="source-note dataset-summary" data-testid="dataset-summary">{snapshot.banks.length} banks · {snapshot.hospitals.length} hospitals · {snapshot.counts.donors.toLocaleString("en-IN")} donors · {snapshot.counts.units} components · {snapshot.counts.historicalIssues} historical issue records. Initial dataset: {(snapshot.storage.jsonBytes / 1024 / 1024).toFixed(2)} MiB UTF-8 JSON; 4× planning allowance {(snapshot.storage.planningBytes / 1024 / 1024).toFixed(2)} / 64 MiB. Actual BSON/index storage awaits Atlas provisioning.</p>
+      <details className="metric-definitions"><summary>How to read this simulation</summary><p>Stock fulfilment means every requested component has been matched and issued; it does not mean handover or transfusion. Median and p95 are nearest-rank creation-to-full-match times in simulated minutes, excluding partial and unresolved requests. Expiry is expired components divided by all components generated in this run. Available stock excludes testing, issued, expired and in-transit units. Historical issues form a separate 14-day baseline and are excluded from run metrics. Demand uses seeded Poisson arrivals with morning and weekend/night patterns; dengue adds platelet demand. Donations create three quarantined products released only after mock screening. Transfers use a simple policy and take one simulated hour. Reset rebuilds the loaded configuration; replay rebuilds it and advances to the elapsed duration. Reload restores configuration and starts paused at zero.</p></details>
+    </>}
+  </>;
+}
+
+function Metric({ label, value, note, id }: { label: string; value: string; note: string; id: string }) { return <div className="panel pulse-metric"><p>{label}</p><strong data-testid={`metric-${id}`}>{value}</strong><span>{note}</span></div>; }

@@ -1,0 +1,7 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+export function CodeRedSound() {
+  const active = useRef<AudioContext | null>(null), [enabled, setEnabled] = useState(false), [message, setMessage] = useState("");
+  useEffect(() => () => { void active.current?.close(); }, []);
+  return <div className="code-red-sound"><label><input type="checkbox" checked={enabled} onChange={e => { setEnabled(e.target.checked); if (!e.target.checked) { void active.current?.close(); active.current = null; } }} /> Enable optional demo sound</label><button className="button button-secondary" disabled={!enabled} onClick={async () => { try { if (active.current && active.current.state !== "closed") await active.current.close(); const context = new AudioContext(); active.current = context; await context.resume(); const oscillator = context.createOscillator(), gain = context.createGain(); gain.gain.setValueAtTime(.04, context.currentTime); gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .4); oscillator.frequency.value = 440; oscillator.connect(gain); gain.connect(context.destination); oscillator.start(); oscillator.stop(context.currentTime + .4); oscillator.onended = () => { void context.close(); if (active.current === context) active.current = null; }; setMessage("Short synthetic demo cue played."); } catch { setMessage("Audio unavailable in this browser."); } }}>Play Code Red cue</button>{message && <span role="status">{message}</span>}</div>;
+}

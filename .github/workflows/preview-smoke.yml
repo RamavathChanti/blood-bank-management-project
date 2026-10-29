@@ -1,0 +1,80 @@
+name: Preview smoke
+
+on:
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      deployment_url:
+        description: "Exact HTTPS Vercel preview URL, without a path"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-${{ github.event.deployment.id || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+      github.event.deployment.production_environment == false &&
+      github.event.deployment.creator.login == 'vercel[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Store the optional bypass secret and the exact Vercel hostname suffix
+    # in this GitHub Environment. Protect it with reviewers when appropriate.
+    environment: preview-smoke
+    env:
+      PLAYWRIGHT_BASE_URL: ${{ inputs.deployment_url || github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+      PREVIEW_HOST_SUFFIX: ${{ vars.PREVIEW_HOST_SUFFIX }}
+      PREVIEW_PROJECT_SLUG: ${{ vars.PREVIEW_PROJECT_SLUG }}
+    steps:
+      # Always execute trusted default-branch tests when a deployment is reported.
+      # Never execute deployed pull-request code with a bypass secret.
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Validate preview origin before using credentials
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          const url = new URL(process.env.PLAYWRIGHT_BASE_URL);
+          const suffix = process.env.PREVIEW_HOST_SUFFIX;
+          const project = process.env.PREVIEW_PROJECT_SLUG;
+          if (!suffix || !/^[a-z0-9-]+\.vercel\.app$/.test(suffix)) {
+            throw new Error('Set PREVIEW_HOST_SUFFIX to the account/team suffix, e.g. my-team.vercel.app.');
+          }
+          if (!project || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(project)) {
+            throw new Error('Set PREVIEW_PROJECT_SLUG to the Vercel project name, e.g. pulsegrid.');
+          }
+          if (url.protocol !== 'https:' || url.username || url.password || url.port ||
+              url.pathname !== '/' || url.search || url.hash ||
+              !url.hostname.startsWith(`${project}-`) || !url.hostname.endsWith(`-${suffix}`)) {
+            throw new Error('Refusing a preview URL outside the configured project/team hostname suffix.');
+          }
+          JS
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:preview
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          PREVIEW_REQUIRE_LIVE: ${{ vars.PREVIEW_REQUIRE_LIVE }}
+          PREVIEW_BANK_STORAGE_STATE: ${{ secrets.PREVIEW_BANK_STORAGE_STATE }}
+          PREVIEW_HOSPITAL_STORAGE_STATE: ${{ secrets.PREVIEW_HOSPITAL_STORAGE_STATE }}
+          PREVIEW_HOSPITAL_B_STORAGE_STATE: ${{ secrets.PREVIEW_HOSPITAL_B_STORAGE_STATE }}
+      - name: Retain preview measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-smoke-results
+          path: test-results/
+          retention-days: 7
